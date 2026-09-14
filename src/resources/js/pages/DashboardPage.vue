@@ -82,7 +82,7 @@ const previewProducts = computed(() => latest.value?.products.slice(0, 5) ?? [])
                     <li v-for="product in previewProducts" :key="product.productCode" class="flex items-center justify-between gap-3 px-5 py-3">
                         <div class="min-w-0">
                             <p class="truncate text-sm font-medium text-slate-900">
-                                {{ product.productCode }} <span class="font-normal text-slate-600">{{ product.productName }}</span>
+                                {{ product.productCode }}
                             </p>
                             <p class="text-xs text-slate-400">{{ product.brand }} ／ {{ product.category }} ／ SKU {{ product.skus.length }}件</p>
                         </div>

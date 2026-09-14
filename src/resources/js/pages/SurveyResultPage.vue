@@ -97,10 +97,12 @@ const filteredProducts = computed(() => {
         .filter((p) => !productQ || p.productCode.toLowerCase().includes(productQ))
         .map((p) => ({
             ...p,
-            skus: p.skus.filter((sku) => matchesConditions(sku.stock)).map((sku) => ({
-                ...sku,
-                skuMatched: hasTextQuery && (!skuQ || sku.skuCode.toLowerCase().includes(skuQ)) && (!asinQ || sku.asin.toLowerCase().includes(asinQ)),
-            })),
+            skus: p.skus
+                .filter((sku) => matchesConditions(sku.stock))
+                .map((sku) => ({
+                    ...sku,
+                    skuMatched: hasTextQuery && (!skuQ || sku.skuCode.toLowerCase().includes(skuQ)) && (!asinQ || sku.asin.toLowerCase().includes(asinQ)),
+                })),
         }))
         .filter((p) => p.skus.length > 0 && (!hasTextQuery || p.skus.some((sku) => sku.skuMatched)));
 });
@@ -202,9 +204,10 @@ function exportExcel(scope: "all" | "filtered") {
         <BaseCard v-for="product in filteredProducts" :key="product.productCode" :padded="false">
             <div class="flex flex-col gap-3 border-b border-slate-200 px-5 py-3.5 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                    <p class="text-sm font-semibold text-slate-900">
-                        {{ product.productCode }} <span class="font-normal text-slate-600">{{ product.productName }}</span>
-                    </p>
+                    <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                        <p class="text-sm font-semibold text-slate-900">{{ product.productCode }}</p>
+                        <span class="text-xs text-slate-400">親ASIN: {{ product.parentAsin || "—" }}</span>
+                    </div>
                     <div class="mt-1 flex gap-1.5">
                         <BaseBadge>{{ product.brand }}</BaseBadge>
                         <BaseBadge>{{ product.category }}</BaseBadge>

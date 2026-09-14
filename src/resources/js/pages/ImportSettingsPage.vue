@@ -33,7 +33,7 @@ const candidateProducts = computed(() =>
         .filter((p) => {
             if (!search.value) return true;
             const q = search.value.toLowerCase();
-            return p.productCode.toLowerCase().includes(q) || p.productName.toLowerCase().includes(q);
+            return p.productCode.toLowerCase().includes(q);
         }),
 );
 
@@ -96,7 +96,6 @@ function save() {
                         <tr>
                             <th class="w-20 px-3 py-2">並び順</th>
                             <th class="px-3 py-2">品番</th>
-                            <th class="px-3 py-2">品名</th>
                             <th class="px-3 py-2">ブランド</th>
                             <th class="px-3 py-2">カテゴリ</th>
                             <th class="px-3 py-2">SKU数</th>
@@ -113,7 +112,6 @@ function save() {
                                 </div>
                             </td>
                             <td class="px-3 py-2 font-medium text-slate-900">{{ product.productCode }}</td>
-                            <td class="px-3 py-2 text-slate-700">{{ product.productName }}</td>
                             <td class="px-3 py-2"
                                 ><BaseBadge>{{ product.brand }}</BaseBadge></td
                             >
@@ -139,7 +137,7 @@ function save() {
         <BaseCard title="品番を追加" :padded="false">
             <template #actions>
                 <div class="flex flex-wrap items-center gap-2">
-                    <div class="w-48"><BaseInput v-model="search" size="sm" placeholder="品番・品名で検索" /></div>
+                    <div class="w-48"><BaseInput v-model="search" size="sm" placeholder="品番で検索" /></div>
                     <div class="w-40"><BaseSelect v-model="brandFilter" size="sm" :options="brandOptions" placeholder="すべてのブランド" /></div>
                     <div class="w-40"><BaseSelect v-model="categoryFilter" size="sm" :options="categoryOptions" placeholder="すべてのカテゴリ" /></div>
                 </div>
@@ -150,7 +148,7 @@ function save() {
                 <li v-for="product in candidateProducts" :key="product.productCode" class="flex items-center justify-between gap-3 px-5 py-2.5">
                     <div class="min-w-0">
                         <p class="truncate text-sm font-medium text-slate-900">
-                            {{ product.productCode }} <span class="font-normal text-slate-600">{{ product.productName }}</span>
+                            {{ product.productCode }}
                         </p>
                         <p class="text-xs text-slate-400">{{ product.brand }} ／ {{ product.category }} ／ SKU {{ product.skus.length }}件</p>
                     </div>

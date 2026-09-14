@@ -51,9 +51,9 @@ function buildProductResults(surveyId: string, productCodes: string[], memoSeedA
             const productMemo = memoSeedActive && seededChance(`${surveyId}-${product.productCode}-memo`, 0.15) ? SAMPLE_MEMOS[productIndex % SAMPLE_MEMOS.length] : "";
             return {
                 productCode: product.productCode,
-                productName: product.productName,
                 brand: product.brand,
                 category: product.category,
+                parentAsin: product.parentAsin,
                 memo: productMemo,
                 skus,
             };

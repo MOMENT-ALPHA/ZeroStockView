@@ -5,10 +5,15 @@ import { useImportSettingsStore } from "@/stores/importSettings";
 
 export const MAX_SURVEY_HISTORY = 100;
 
+// SurveyProductResult/SurveySkuResultの項目を追加・変更した際はインクリメントする。
+// 既存ブラウザに永続化された古い形状のダミーデータを破棄し、再生成させるための版数。
+const SURVEY_DATA_VERSION = 2;
+
 export const useSurveysStore = defineStore("surveys", {
     state: () => ({
         surveys: [] as Survey[],
         initialized: false,
+        dataVersion: 0,
     }),
     getters: {
         sortedSurveys: (state) => [...state.surveys].sort((a, b) => new Date(b.executedAt).getTime() - new Date(a.executedAt).getTime()),
@@ -18,6 +23,11 @@ export const useSurveysStore = defineStore("surveys", {
     },
     actions: {
         ensureSeeded() {
+            if (this.dataVersion !== SURVEY_DATA_VERSION) {
+                this.surveys = [];
+                this.initialized = false;
+                this.dataVersion = SURVEY_DATA_VERSION;
+            }
             if (this.initialized && this.surveys.length > 0) return;
             const importSettings = useImportSettingsStore();
             this.surveys = createDummySurveys(importSettings.selectedProductCodes);

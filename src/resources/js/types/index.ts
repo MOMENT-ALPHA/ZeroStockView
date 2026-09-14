@@ -10,9 +10,9 @@ export interface Sku {
 
 export interface Product {
     productCode: string;
-    productName: string;
     brand: string;
     category: string;
+    parentAsin: string;
     skus: Sku[];
 }
 
@@ -48,9 +48,9 @@ export interface SurveySkuResult {
 
 export interface SurveyProductResult {
     productCode: string;
-    productName: string;
     brand: string;
     category: string;
+    parentAsin: string;
     memo: string;
     skus: SurveySkuResult[];
 }
