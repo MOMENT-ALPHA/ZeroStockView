@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
+import AppIcon from "@/components/ui/AppIcon.vue";
 import BaseBadge from "@/components/ui/BaseBadge.vue";
 import BaseButton from "@/components/ui/BaseButton.vue";
 import BaseCard from "@/components/ui/BaseCard.vue";
@@ -88,6 +89,7 @@ const filteredProducts = computed(() => {
     const productQ = productCodeQuery.value.trim().toLowerCase();
     const skuQ = skuQuery.value.trim().toLowerCase();
     const asinQ = asinQuery.value.trim().toLowerCase();
+    const hasTextQuery = Boolean(skuQ || asinQ);
 
     return s.products
         .filter((p) => !brandFilter.value || p.brand === brandFilter.value)
@@ -95,21 +97,26 @@ const filteredProducts = computed(() => {
         .filter((p) => !productQ || p.productCode.toLowerCase().includes(productQ))
         .map((p) => ({
             ...p,
-            skus: p.skus.filter((sku) => {
-                if (skuQ && !sku.skuCode.toLowerCase().includes(skuQ)) return false;
-                if (asinQ && !sku.asin.toLowerCase().includes(asinQ)) return false;
-                if (!matchesConditions(sku.stock)) return false;
-                return true;
-            }),
+            skus: p.skus.filter((sku) => matchesConditions(sku.stock)).map((sku) => ({
+                ...sku,
+                skuMatched: hasTextQuery && (!skuQ || sku.skuCode.toLowerCase().includes(skuQ)) && (!asinQ || sku.asin.toLowerCase().includes(asinQ)),
+            })),
         }))
-        .filter((p) => p.skus.length > 0);
+        .filter((p) => p.skus.length > 0 && (!hasTextQuery || p.skus.some((sku) => sku.skuMatched)));
 });
 
 const totalSkuCount = computed(() => survey.value?.products.reduce((sum, p) => sum + p.skus.length, 0) ?? 0);
-const matchedSkuCount = computed(() => filteredProducts.value.reduce((sum, p) => sum + p.skus.length, 0));
+const matchedSkuCount = computed(() => {
+    const hasTextQuery = Boolean(skuQuery.value.trim() || asinQuery.value.trim());
+    return filteredProducts.value.reduce((sum, p) => sum + (hasTextQuery ? p.skus.filter((sku) => sku.skuMatched).length : p.skus.length), 0);
+});
 
 function isZero(stock: StockQuantities): boolean {
     return Object.values(stock).every((v) => v === 0);
+}
+
+function isGroupZero(stock: StockQuantities, group: "Amazon" | "BOSS"): boolean {
+    return group === "Amazon" ? stock.amazonOwn === 0 && stock.amazonFba === 0 : stock.bossOwn === 0 && stock.bossRfc === 0;
 }
 
 function exportExcel(scope: "all" | "filtered") {
@@ -204,49 +211,56 @@ function exportExcel(scope: "all" | "filtered") {
                     </div>
                 </div>
                 <div class="w-full lg:w-80">
-                    <label class="mb-1 block text-xs font-medium text-slate-400">品番メモ</label>
-                    <MemoField :model-value="product.memo" placeholder="品番メモを入力" @save="(v) => surveysStore.updateProductMemo(survey!.id, product.productCode, v)" />
+                    <label class="mb-1 block text-xs font-medium text-slate-400">メモ</label>
+                    <MemoField :model-value="product.memo" placeholder="メモを入力" @save="(v) => surveysStore.updateProductMemo(survey!.id, product.productCode, v)" />
                 </div>
             </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full min-w-225 text-left text-sm">
-                    <thead class="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
+                    <thead class="border-b border-slate-200 bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
                         <tr>
-                            <th rowspan="2" class="px-3 py-2 align-bottom">SKU</th>
-                            <th rowspan="2" class="px-3 py-2 align-bottom">カラー / サイズ</th>
-                            <th rowspan="2" class="px-3 py-2 align-bottom">ASIN</th>
-                            <th colspan="2" class="border-l border-slate-200 px-3 py-1 text-center">Amazon</th>
-                            <th colspan="2" class="border-l border-slate-200 px-3 py-1 text-center">BOSS</th>
-                            <th rowspan="2" class="border-l border-slate-200 px-3 py-2 text-right align-bottom">フリー在庫</th>
-                            <th rowspan="2" class="px-3 py-2 text-right align-bottom">ECストック</th>
-                            <th rowspan="2" class="w-64 px-3 py-2 align-bottom">SKUメモ</th>
+                            <th rowspan="2" class="px-3 py-2 align-center w-40">SKU</th>
+                            <th colspan="2" class="border-l border-b border-slate-200 px-3 py-1 text-center">Amazon</th>
+                            <th colspan="2" class="border-l border-b border-slate-200 px-3 py-1 text-center">BOSS</th>
+                            <th rowspan="2" class="border-l border-slate-200 px-3 py-2 w-20 text-center align-center">フリー在庫</th>
+                            <th rowspan="2" class="border-l border-slate-200 px-3 py-2 w-20 text-center align-center">ECストック</th>
+                            <th rowspan="2" class="border-l border-slate-200 px-3 py-2 align-center">メモ</th>
                         </tr>
                         <tr>
-                            <th class="border-l border-slate-200 px-3 py-1 text-right font-normal normal-case">自社</th>
-                            <th class="px-3 py-1 text-right font-normal normal-case">FBA</th>
-                            <th class="border-l border-slate-200 px-3 py-1 text-right font-normal normal-case">自社</th>
-                            <th class="px-3 py-1 text-right font-normal normal-case">RFC</th>
+                            <th class="border-l border-slate-200 px-3 py-1 w-20 text-center font-normal normal-case">自社</th>
+                            <th class="border-l border-slate-200 px-3 py-1 w-20 text-center font-normal normal-case">FBA</th>
+                            <th class="border-l border-slate-200 px-3 py-1 w-20 text-center font-normal normal-case">自社</th>
+                            <th class="border-l border-slate-200 px-3 py-1 w-20 text-center font-normal normal-case">RFC</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        <tr v-for="sku in product.skus" :key="sku.skuCode" :class="isZero(sku.stock) ? 'bg-slate-50/60' : ''">
-                            <td class="px-3 py-2.5 font-medium text-slate-900">{{ sku.skuCode }}</td>
-                            <td class="px-3 py-2.5 text-slate-600">{{ sku.colorName }} / {{ sku.size }}</td>
-                            <td class="px-3 py-2.5 text-slate-500">{{ sku.asin }}</td>
+                        <tr v-for="sku in product.skus" :key="sku.skuCode" :class="sku.skuMatched ? 'bg-amber-50' : isZero(sku.stock) ? 'bg-slate-50/60' : ''">
+                            <td class="px-3 py-2.5">
+                                <div class="flex flex-col">
+                                    <span class="font-semibold" :class="sku.skuMatched ? 'text-amber-800' : 'text-slate-900'">{{ sku.skuCode }}</span>
+                                    <span class="flex items-center text-xs" :class="sku.skuMatched ? 'text-amber-700' : 'text-slate-400'">
+                                        {{ sku.asin }}
+                                    </span>
+                                </div>
+                            </td>
                             <td
                                 v-for="field in STOCK_FIELDS"
                                 :key="field.key"
-                                class="px-3 py-2.5 text-right tabular-nums"
+                                class="border-l border-slate-200 px-3 py-2.5 text-right tabular-nums"
                                 :class="[
                                     field.key === 'amazonOwn' || field.key === 'bossOwn' || field.key === 'freeStock' ? 'border-l border-slate-100' : '',
-                                    sku.stock[field.key] === 0 ? 'text-slate-300' : 'font-semibold text-slate-900',
+                                    (field.group === 'Amazon' || field.group === 'BOSS') && isGroupZero(sku.stock, field.group)
+                                        ? 'bg-rose-50 font-semibold text-rose-400'
+                                        : sku.stock[field.key] === 0
+                                          ? 'text-slate-300'
+                                          : 'font-semibold text-slate-900',
                                 ]"
                             >
                                 {{ sku.stock[field.key] }}
                             </td>
-                            <td class="px-3 py-2.5">
-                                <MemoField :model-value="sku.memo" placeholder="SKUメモ" @save="(v) => surveysStore.updateSkuMemo(survey!.id, sku.skuCode, v)" />
+                            <td class="border-l border-slate-200 px-3 py-2.5">
+                                <MemoField :model-value="sku.memo" placeholder="メモを入力" @save="(v) => surveysStore.updateSkuMemo(survey!.id, sku.skuCode, v)" />
                             </td>
                         </tr>
                     </tbody>

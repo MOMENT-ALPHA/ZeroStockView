@@ -62,7 +62,7 @@ router.beforeEach((to) => {
         return { name: "login", query: { redirect: to.fullPath } };
     }
     if (auth.isLoggedIn && to.name === "login") {
-        return { name: "data-import" };
+        return { name: "dashboard" };
     }
     return true;
 });

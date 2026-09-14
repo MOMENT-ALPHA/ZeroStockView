@@ -1,20 +1,30 @@
 <script setup lang="ts">
 import { computed, useId } from "vue";
 
-const props = withDefaults(defineProps<{ modelValue: string; label?: string; placeholder?: string; rows?: number; error?: string; hint?: string }>(), {
-    label: "",
-    placeholder: "",
-    rows: 4,
-    error: "",
-    hint: "",
-});
+const props = withDefaults(
+    defineProps<{ modelValue: string; label?: string; placeholder?: string; rows?: number; error?: string; hint?: string; bordered?: boolean }>(),
+    {
+        label: "",
+        placeholder: "",
+        rows: 4,
+        error: "",
+        hint: "",
+        bordered: true,
+    },
+);
 
 const emit = defineEmits<{ "update:modelValue": [value: string] }>();
 const areaId = useId();
 
 const areaClass = computed(() => [
-    "w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:outline focus:outline-2",
-    props.error ? "border-rose-400 focus:outline-rose-500" : "border-slate-300 focus:border-primary-500 focus:outline-primary-500/40",
+    "w-full rounded-lg border py-2 text-sm text-slate-900 placeholder:text-slate-400 transition-colors",
+    props.bordered ? "px-3" : "",
+    props.bordered ? "bg-white" : "bg-transparent focus:bg-white",
+    props.error
+        ? "border-rose-400 focus:outline focus:outline-2 focus:outline-rose-500"
+        : props.bordered
+          ? "border-slate-300 focus:border-primary-500 focus:outline focus:outline-2 focus:outline-primary-500/40"
+          : "border-transparent focus:outline-none",
 ]);
 </script>
 

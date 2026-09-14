@@ -88,9 +88,16 @@ function runImport() {
         </BaseAlert>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <BaseCard v-for="fileType in IMPORT_FILE_TYPES" :key="fileType.type" :title="fileType.type" :description="`${fileType.format} ／ ${fileType.stockScope}`">
-                <FileDropzone :accept="accepts[fileType.type]" :model-value="files[fileType.type]" @update:model-value="(f) => setFile(fileType.type, f)" />
-            </BaseCard>
+            <FileDropzone
+                v-for="fileType in IMPORT_FILE_TYPES"
+                :key="fileType.type"
+                :accept="accepts[fileType.type]"
+                :model-value="files[fileType.type]"
+                :title="fileType.type"
+                :description="`${fileType.format} ／ ${fileType.stockScope}`"
+                :icon="fileType.icon"
+                @update:model-value="(f) => setFile(fileType.type, f)"
+            />
         </div>
 
         <BaseAlert v-if="errorMessage" tone="danger" title="取込に失敗しました">{{ errorMessage }}</BaseAlert>

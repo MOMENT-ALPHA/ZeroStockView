@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from "vue";
+import AppIcon from "@/components/ui/AppIcon.vue";
 import BaseInput from "@/components/ui/BaseInput.vue";
 import BaseTextarea from "@/components/ui/BaseTextarea.vue";
 
@@ -19,10 +20,13 @@ const props = withDefaults(
 
 const emit = defineEmits<{ "update:modelValue": [string]; save: [string] }>();
 
+type SaveState = "idle" | "saving" | "saved";
+
 const text = ref(props.modelValue);
-const saved = ref(false);
-let saveTimer: ReturnType<typeof setTimeout> | undefined;
-let savedFlashTimer: ReturnType<typeof setTimeout> | undefined;
+const state = ref<SaveState>("idle");
+let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+let savingTimer: ReturnType<typeof setTimeout> | undefined;
+let savedTimer: ReturnType<typeof setTimeout> | undefined;
 
 watch(
     () => props.modelValue,
@@ -33,35 +37,38 @@ watch(
 
 function onInput(value: string) {
     text.value = value;
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(commit, 700);
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(commit, 700);
 }
 
 function commit() {
     if (text.value === props.modelValue) return;
-    emit("update:modelValue", text.value);
-    emit("save", text.value);
-    saved.value = true;
-    clearTimeout(savedFlashTimer);
-    savedFlashTimer = setTimeout(() => (saved.value = false), 1600);
+    state.value = "saving";
+    clearTimeout(savingTimer);
+    clearTimeout(savedTimer);
+    savingTimer = setTimeout(() => {
+        emit("update:modelValue", text.value);
+        emit("save", text.value);
+        state.value = "saved";
+        savedTimer = setTimeout(() => (state.value = "idle"), 1600);
+    }, 450);
 }
 
 onBeforeUnmount(() => {
-    clearTimeout(saveTimer);
-    clearTimeout(savedFlashTimer);
+    clearTimeout(debounceTimer);
+    clearTimeout(savingTimer);
+    clearTimeout(savedTimer);
 });
 </script>
 
 <template>
     <div class="relative">
-        <BaseTextarea v-if="multiline" :model-value="text" :placeholder="placeholder" :rows="rows" @update:model-value="onInput" />
-        <BaseInput v-else :model-value="text" size="sm" :placeholder="placeholder" @update:model-value="onInput" />
+        <BaseTextarea v-if="multiline" :model-value="text" :placeholder="placeholder" :rows="rows" :bordered="false" @update:model-value="onInput" />
+        <BaseInput v-else :model-value="text" size="sm" :placeholder="placeholder" :bordered="false" @update:model-value="onInput" />
         <Transition name="fade">
-            <span v-if="saved" class="absolute top-full left-0 z-10 mt-0.5 flex items-center gap-1 text-xs font-medium text-emerald-600">
-                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
-                保存しました
+            <span v-if="state !== 'idle'" class="pointer-events-none absolute top-1/2 right-1.5 z-10 -translate-y-1/2">
+                <AppIcon v-if="state === 'saving'" name="refresh" :size="14" class="animate-spin text-slate-400" />
+                <AppIcon v-else name="check_circle" :size="14" class="text-emerald-600" />
             </span>
         </Transition>
     </div>
