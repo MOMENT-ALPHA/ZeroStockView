@@ -12,6 +12,11 @@ const router = createRouter({
             meta: { public: true },
         },
         {
+            path: "/dashboard",
+            name: "dashboard",
+            component: () => import("@/pages/DashboardPage.vue"),
+        },
+        {
             path: "/import",
             name: "data-import",
             component: () => import("@/pages/DataImportPage.vue"),
@@ -20,11 +25,6 @@ const router = createRouter({
             path: "/import/settings",
             name: "import-settings",
             component: () => import("@/pages/ImportSettingsPage.vue"),
-        },
-        {
-            path: "/dashboard",
-            name: "dashboard",
-            component: () => import("@/pages/DashboardPage.vue"),
         },
         {
             path: "/surveys",

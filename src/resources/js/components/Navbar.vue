@@ -28,7 +28,7 @@ function logout() {
     <nav class="border-b border-slate-200 bg-white">
         <div class="mx-auto flex w-full max-w-300 flex-wrap items-center justify-between px-4 py-2.5 sm:px-6 lg:px-8">
             <RouterLink :to="{ name: 'data-import' }" class="flex items-center gap-2">
-                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
+                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white">
                     <AppIcon name="counter_0" :size="20" filled />
                 </span>
                 <span class="flex flex-col leading-tight">
@@ -52,7 +52,7 @@ function logout() {
                     :key="item.name"
                     :to="{ name: item.name }"
                     class="rounded-lg px-3 py-2 text-sm font-medium transition-colors"
-                    :class="isActive(item.name) ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
+                    :class="isActive(item.name) ? 'bg-primary-50 text-primary-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
                 >
                     {{ item.label }}
                 </RouterLink>
@@ -65,7 +65,7 @@ function logout() {
                 </button>
                 <div v-if="userMenuOpen" class="absolute right-0 z-20 mt-2 w-48 rounded-lg border border-slate-200 bg-white py-1 shadow-lg" @click="userMenuOpen = false">
                     <RouterLink :to="{ name: 'password-change' }" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"> パスワード変更 </RouterLink>
-                    <button type="button" class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50" @click="logout"> ログアウト </button>
+                    <button type="button" class="block w-full px-4 py-2 text-left text-sm text-rose-600 hover:bg-rose-50" @click="logout"> ログアウト </button>
                 </div>
             </div>
         </div>
@@ -76,7 +76,7 @@ function logout() {
                 :key="item.name"
                 :to="{ name: item.name }"
                 class="block rounded-lg px-3 py-2 text-sm font-medium"
-                :class="isActive(item.name) ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100'"
+                :class="isActive(item.name) ? 'bg-primary-50 text-primary-700' : 'text-slate-600 hover:bg-slate-100'"
                 @click="mobileOpen = false"
             >
                 {{ item.label }}
@@ -84,12 +84,12 @@ function logout() {
             <RouterLink
                 :to="{ name: 'password-change' }"
                 class="block rounded-lg px-3 py-2 text-sm font-medium"
-                :class="isActive('password-change') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100'"
+                :class="isActive('password-change') ? 'bg-primary-50 text-primary-700' : 'text-slate-600 hover:bg-slate-100'"
                 @click="mobileOpen = false"
             >
                 パスワード変更
             </RouterLink>
-            <button type="button" class="mt-1 block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50" @click="logout"> ログアウト </button>
+            <button type="button" class="mt-1 block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-600 hover:bg-rose-50" @click="logout"> ログアウト </button>
         </div>
     </nav>
 </template>

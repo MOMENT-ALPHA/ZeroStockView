@@ -82,3 +82,8 @@ export interface Survey {
 
 export type ZeroStockFilterKey = "amazonZero" | "bossZero" | "freeZero" | "ecZero";
 export type HasStockFilterKey = "freeHas" | "ecHas";
+
+export interface SelectOption {
+    value: string | number;
+    label: string;
+}

@@ -2,6 +2,10 @@
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AppIcon from "@/components/ui/AppIcon.vue";
+import BaseAlert from "@/components/ui/BaseAlert.vue";
+import BaseButton from "@/components/ui/BaseButton.vue";
+import BaseCard from "@/components/ui/BaseCard.vue";
+import BaseInput from "@/components/ui/BaseInput.vue";
 import { useAuthStore } from "@/stores/auth";
 
 const auth = useAuthStore();
@@ -37,51 +41,25 @@ function submit() {
     <div class="flex min-h-screen items-center justify-center bg-slate-100 px-4">
         <div class="w-full max-w-sm">
             <div class="mb-6 flex flex-col items-center gap-2 text-center">
-                <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white">
+                <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 text-white">
                     <AppIcon name="counter_0" :size="26" filled />
                 </span>
                 <h1 class="text-lg font-semibold text-slate-900">ZeroStockView</h1>
                 <p class="text-sm text-slate-500">ゼロ在庫照会システム</p>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <BaseCard>
                 <form class="flex flex-col gap-4" @submit.prevent="submit">
-                    <div v-if="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-                        {{ errorMessage }}
-                    </div>
+                    <BaseAlert v-if="errorMessage" tone="danger">{{ errorMessage }}</BaseAlert>
 
-                    <div>
-                        <label for="loginId" class="mb-1 block text-sm font-medium text-slate-700">ログインID</label>
-                        <input
-                            id="loginId"
-                            v-model="loginId"
-                            type="text"
-                            autocomplete="username"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                            placeholder="admin"
-                        />
-                    </div>
-                    <div>
-                        <label for="password" class="mb-1 block text-sm font-medium text-slate-700">パスワード</label>
-                        <input
-                            id="password"
-                            v-model="password"
-                            type="password"
-                            autocomplete="current-password"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                            placeholder="••••••••••••"
-                        />
-                    </div>
+                    <BaseInput v-model="loginId" label="ログインID" autocomplete="username" placeholder="admin" />
+                    <BaseInput v-model="password" type="password" label="パスワード" autocomplete="current-password" placeholder="••••••••••••" />
 
-                    <button
-                        type="submit"
-                        :disabled="submitting"
-                        class="mt-1 flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
+                    <BaseButton type="submit" variant="primary" block :loading="submitting">
                         {{ submitting ? "ログイン中…" : "ログイン" }}
-                    </button>
+                    </BaseButton>
                 </form>
-            </div>
+            </BaseCard>
 
             <p class="mt-4 text-center text-xs text-slate-400">
                 デモ用アカウント: ID <code class="rounded bg-slate-200 px-1 py-0.5">admin</code> / パスワード

@@ -1,15 +1,31 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import BaseBadge from "@/components/ui/BaseBadge.vue";
+import BaseButton from "@/components/ui/BaseButton.vue";
+import BaseCard from "@/components/ui/BaseCard.vue";
+import BaseEmpty from "@/components/ui/BaseEmpty.vue";
+import BasePagination from "@/components/ui/BasePagination.vue";
 import ConfirmModal from "@/components/ui/ConfirmModal.vue";
 import { MAX_SURVEY_HISTORY, useSurveysStore } from "@/stores/surveys";
-import { useToastStore } from "@/stores/toast";
+import { useUiStore } from "@/stores/ui";
 import { formatDateTime } from "@/utils/format";
 
+const router = useRouter();
 const surveys = useSurveysStore();
-const toast = useToastStore();
+const toast = useUiStore();
+
+const PER_PAGE = 10;
+const page = ref(1);
 
 const list = computed(() => surveys.sortedSurveys);
 const latestId = computed(() => surveys.latestSurvey?.id);
+const totalPages = computed(() => Math.max(1, Math.ceil(list.value.length / PER_PAGE)));
+const pagedList = computed(() => list.value.slice((page.value - 1) * PER_PAGE, page.value * PER_PAGE));
+
+watch(totalPages, (tp) => {
+    if (page.value > tp) page.value = tp;
+});
 
 function skuCount(id: string): number {
     return surveys.getSurvey(id)?.products.reduce((sum, p) => sum + p.skus.length, 0) ?? 0;
@@ -42,46 +58,45 @@ function confirmDelete() {
             </p>
         </div>
 
-        <div v-if="list.length === 0" class="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-sm text-slate-400"> 調査履歴がありません。 </div>
+        <BaseCard v-if="list.length === 0" :padded="false">
+            <BaseEmpty icon="history" title="調査履歴がありません" />
+        </BaseCard>
 
-        <div v-else class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
-                    <tr>
-                        <th class="px-4 py-2.5">調査日時</th>
-                        <th class="px-4 py-2.5">対象品番数</th>
-                        <th class="px-4 py-2.5">SKU数</th>
-                        <th class="px-4 py-2.5">取込ファイル数</th>
-                        <th class="px-4 py-2.5"></th>
-                        <th class="w-40 px-4 py-2.5 text-right">操作</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    <tr v-for="survey in list" :key="survey.id" class="hover:bg-slate-50">
-                        <td class="px-4 py-3 font-medium text-slate-900">{{ formatDateTime(survey.executedAt) }}</td>
-                        <td class="px-4 py-3 text-slate-600">{{ survey.products.length }}</td>
-                        <td class="px-4 py-3 text-slate-600">{{ skuCount(survey.id) }}</td>
-                        <td class="px-4 py-3 text-slate-600">{{ survey.files.length }}</td>
-                        <td class="px-4 py-3">
-                            <span v-if="survey.id === latestId" class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700"> 最新 </span>
-                        </td>
-                        <td class="px-4 py-3 text-right">
-                            <div class="flex justify-end gap-2">
-                                <RouterLink
-                                    :to="{ name: 'survey-result', params: { id: survey.id } }"
-                                    class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                                >
-                                    結果を開く
-                                </RouterLink>
-                                <button type="button" class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50" @click="requestDelete(survey.id)">
-                                    削除
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <BaseCard v-else :padded="false">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
+                        <tr>
+                            <th class="px-5 py-2.5">調査日時</th>
+                            <th class="px-5 py-2.5">対象品番数</th>
+                            <th class="px-5 py-2.5">SKU数</th>
+                            <th class="px-5 py-2.5">取込ファイル数</th>
+                            <th class="px-5 py-2.5"></th>
+                            <th class="w-44 px-5 py-2.5 text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr v-for="survey in pagedList" :key="survey.id" class="hover:bg-slate-50">
+                            <td class="px-5 py-3 font-medium text-slate-900">{{ formatDateTime(survey.executedAt) }}</td>
+                            <td class="px-5 py-3 text-slate-600">{{ survey.products.length }}</td>
+                            <td class="px-5 py-3 text-slate-600">{{ skuCount(survey.id) }}</td>
+                            <td class="px-5 py-3 text-slate-600">{{ survey.files.length }}</td>
+                            <td class="px-5 py-3">
+                                <BaseBadge v-if="survey.id === latestId" tone="brand">最新</BaseBadge>
+                            </td>
+                            <td class="px-5 py-3 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <BaseButton variant="secondary" size="sm" @click="router.push({ name: 'survey-result', params: { id: survey.id } })">結果を開く</BaseButton>
+                                    <BaseButton variant="danger-ghost" size="sm" icon="delete" aria-label="削除" @click="requestDelete(survey.id)" />
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <BasePagination v-if="list.length > PER_PAGE" :page="page" :total-pages="totalPages" :total="list.length" :per-page="PER_PAGE" @change="page = $event" />
+        </BaseCard>
 
         <ConfirmModal
             :open="pendingDeleteId !== null"

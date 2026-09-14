@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import BaseButton from "@/components/ui/BaseButton.vue";
+import BaseModal from "@/components/ui/BaseModal.vue";
+
 withDefaults(
     defineProps<{
         open: boolean;
@@ -17,21 +20,11 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>();
 </script>
 
 <template>
-    <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-        <div class="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl">
-            <h2 class="text-base font-semibold text-slate-900">{{ title }}</h2>
-            <p class="mt-2 text-sm text-slate-600">{{ message }}</p>
-            <div class="mt-5 flex justify-end gap-2">
-                <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" @click="emit('cancel')"> キャンセル </button>
-                <button
-                    type="button"
-                    class="rounded-lg px-4 py-2 text-sm font-medium text-white"
-                    :class="danger ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'"
-                    @click="emit('confirm')"
-                >
-                    {{ confirmLabel }}
-                </button>
-            </div>
-        </div>
-    </div>
+    <BaseModal :open="open" :title="title" width="sm" @close="emit('cancel')">
+        <p class="text-sm text-slate-600">{{ message }}</p>
+        <template #footer>
+            <BaseButton variant="secondary" @click="emit('cancel')">キャンセル</BaseButton>
+            <BaseButton :variant="danger ? 'danger' : 'primary'" @click="emit('confirm')">{{ confirmLabel }}</BaseButton>
+        </template>
+    </BaseModal>
 </template>

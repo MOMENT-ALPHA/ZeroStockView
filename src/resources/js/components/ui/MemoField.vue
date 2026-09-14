@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onBeforeUnmount, ref, watch } from "vue";
+import BaseInput from "@/components/ui/BaseInput.vue";
+import BaseTextarea from "@/components/ui/BaseTextarea.vue";
 
 const props = withDefaults(
     defineProps<{
@@ -19,7 +21,8 @@ const emit = defineEmits<{ "update:modelValue": [string]; save: [string] }>();
 
 const text = ref(props.modelValue);
 const saved = ref(false);
-let savedTimer: ReturnType<typeof setTimeout> | undefined;
+let saveTimer: ReturnType<typeof setTimeout> | undefined;
+let savedFlashTimer: ReturnType<typeof setTimeout> | undefined;
 
 watch(
     () => props.modelValue,
@@ -28,37 +31,33 @@ watch(
     },
 );
 
+function onInput(value: string) {
+    text.value = value;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(commit, 700);
+}
+
 function commit() {
     if (text.value === props.modelValue) return;
     emit("update:modelValue", text.value);
     emit("save", text.value);
     saved.value = true;
-    clearTimeout(savedTimer);
-    savedTimer = setTimeout(() => (saved.value = false), 1600);
+    clearTimeout(savedFlashTimer);
+    savedFlashTimer = setTimeout(() => (saved.value = false), 1600);
 }
+
+onBeforeUnmount(() => {
+    clearTimeout(saveTimer);
+    clearTimeout(savedFlashTimer);
+});
 </script>
 
 <template>
     <div class="relative">
-        <textarea
-            v-if="multiline"
-            v-model="text"
-            :placeholder="placeholder"
-            :rows="rows"
-            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-            @blur="commit"
-        />
-        <input
-            v-else
-            v-model="text"
-            type="text"
-            :placeholder="placeholder"
-            class="w-full min-w-40 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-            @blur="commit"
-            @keydown.enter="($event.target as HTMLInputElement).blur()"
-        />
+        <BaseTextarea v-if="multiline" :model-value="text" :placeholder="placeholder" :rows="rows" @update:model-value="onInput" />
+        <BaseInput v-else :model-value="text" size="sm" :placeholder="placeholder" @update:model-value="onInput" />
         <Transition name="fade">
-            <span v-if="saved" class="absolute top-full left-0 mt-0.5 flex items-center gap-1 text-xs font-medium text-green-600">
+            <span v-if="saved" class="absolute top-full left-0 z-10 mt-0.5 flex items-center gap-1 text-xs font-medium text-emerald-600">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                 </svg>

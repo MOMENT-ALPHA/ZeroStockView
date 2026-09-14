@@ -1,24 +1,32 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
+import BaseBadge from "@/components/ui/BaseBadge.vue";
+import BaseButton from "@/components/ui/BaseButton.vue";
+import BaseCard from "@/components/ui/BaseCard.vue";
+import BaseEmpty from "@/components/ui/BaseEmpty.vue";
+import BaseInput from "@/components/ui/BaseInput.vue";
+import BaseSelect from "@/components/ui/BaseSelect.vue";
 import MemoField from "@/components/ui/MemoField.vue";
 import { useSurveysStore } from "@/stores/surveys";
-import { useToastStore } from "@/stores/toast";
-import { STOCK_FIELDS, type StockQuantities } from "@/types";
+import { useUiStore } from "@/stores/ui";
+import { STOCK_FIELDS, type SelectOption, type StockQuantities } from "@/types";
 import { formatDateTime } from "@/utils/format";
 
 const props = defineProps<{ id: string }>();
 
+const router = useRouter();
 const surveysStore = useSurveysStore();
-const toast = useToastStore();
+const toast = useUiStore();
 
 const survey = computed(() => surveysStore.getSurvey(props.id));
 const isLatest = computed(() => surveysStore.latestSurvey?.id === props.id);
 
-const brandOptions = computed(() => Array.from(new Set(survey.value?.products.map((p) => p.brand) ?? [])));
-const categoryOptions = computed(() => Array.from(new Set(survey.value?.products.map((p) => p.category) ?? [])));
+const brandOptions = computed<SelectOption[]>(() => Array.from(new Set(survey.value?.products.map((p) => p.brand) ?? [])).map((b) => ({ value: b, label: b })));
+const categoryOptions = computed<SelectOption[]>(() => Array.from(new Set(survey.value?.products.map((p) => p.category) ?? [])).map((c) => ({ value: c, label: c })));
 
-const brandFilter = ref("");
-const categoryFilter = ref("");
+const brandFilter = ref<string | null>(null);
+const categoryFilter = ref<string | null>(null);
 const productCodeQuery = ref("");
 const skuQuery = ref("");
 const asinQuery = ref("");
@@ -66,8 +74,8 @@ function matchesConditions(stock: StockQuantities): boolean {
 const hasActiveFilters = computed(() => Boolean(brandFilter.value || categoryFilter.value || productCodeQuery.value || skuQuery.value || asinQuery.value) || activeConditions.value.length > 0);
 
 function clearFilters() {
-    brandFilter.value = "";
-    categoryFilter.value = "";
+    brandFilter.value = null;
+    categoryFilter.value = null;
     productCodeQuery.value = "";
     skuQuery.value = "";
     asinQuery.value = "";
@@ -111,10 +119,11 @@ function exportExcel(scope: "all" | "filtered") {
 </script>
 
 <template>
-    <div v-if="!survey" class="flex flex-col items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-        <p class="text-sm font-medium text-slate-600">指定された調査結果が見つかりません。削除された可能性があります。</p>
-        <RouterLink :to="{ name: 'survey-history' }" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"> 調査履歴に戻る </RouterLink>
-    </div>
+    <BaseCard v-if="!survey" :padded="false">
+        <BaseEmpty icon="search_off" title="指定された調査結果が見つかりません" description="削除された可能性があります。">
+            <BaseButton variant="primary" @click="router.push({ name: 'survey-history' })">調査履歴に戻る</BaseButton>
+        </BaseEmpty>
+    </BaseCard>
 
     <div v-else class="flex flex-col gap-6">
         <div class="flex flex-col gap-2">
@@ -127,77 +136,71 @@ function exportExcel(scope: "all" | "filtered") {
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-2">
                     <h1 class="text-xl font-semibold text-slate-900">在庫調査結果</h1>
-                    <span v-if="isLatest" class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">最新</span>
+                    <BaseBadge v-if="isLatest" tone="brand">最新</BaseBadge>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <button type="button" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" @click="exportExcel('filtered')">
-                        絞込結果をExcel出力
-                    </button>
-                    <button type="button" class="rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700" @click="exportExcel('all')"> 全件をExcel出力 </button>
+                    <BaseButton variant="secondary" icon="table_view" @click="exportExcel('filtered')">絞込結果をExcel出力</BaseButton>
+                    <BaseButton variant="primary" icon="download" @click="exportExcel('all')">全件をExcel出力</BaseButton>
                 </div>
             </div>
             <p class="text-sm text-slate-500">調査日時: {{ formatDateTime(survey.executedAt) }}</p>
         </div>
 
-        <section class="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4">
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                <select v-model="brandFilter" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                    <option value="">すべてのブランド</option>
-                    <option v-for="b in brandOptions" :key="b" :value="b">{{ b }}</option>
-                </select>
-                <select v-model="categoryFilter" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                    <option value="">すべてのカテゴリ</option>
-                    <option v-for="c in categoryOptions" :key="c" :value="c">{{ c }}</option>
-                </select>
-                <input v-model="productCodeQuery" type="text" placeholder="品番で絞込" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-                <input v-model="skuQuery" type="text" placeholder="SKUで絞込" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-                <input v-model="asinQuery" type="text" placeholder="ASINで絞込" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-            </div>
+        <BaseCard>
+            <div class="flex flex-col gap-4">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                    <BaseSelect v-model="brandFilter" :options="brandOptions" placeholder="すべてのブランド" />
+                    <BaseSelect v-model="categoryFilter" :options="categoryOptions" placeholder="すべてのカテゴリ" />
+                    <BaseInput v-model="productCodeQuery" placeholder="品番で絞込" />
+                    <BaseInput v-model="skuQuery" placeholder="SKUで絞込" />
+                    <BaseInput v-model="asinQuery" placeholder="ASINで絞込" />
+                </div>
 
-            <div class="flex flex-wrap items-center gap-2">
-                <span class="text-xs font-medium text-slate-400">在庫ゼロ:</span>
-                <button
-                    v-for="btn in ZERO_STOCK_BUTTONS"
-                    :key="btn.key"
-                    type="button"
-                    class="rounded-full border px-3 py-1 text-xs font-medium transition-colors"
-                    :class="activeConditions.includes(btn.key) ? 'border-red-500 bg-red-500 text-white' : 'border-slate-300 text-slate-600 hover:bg-slate-50'"
-                    @click="toggleCondition(btn.key)"
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-medium text-slate-400">在庫ゼロ:</span>
+                    <button
+                        v-for="btn in ZERO_STOCK_BUTTONS"
+                        :key="btn.key"
+                        type="button"
+                        class="rounded-full border px-3 py-1 text-xs font-medium transition-colors"
+                        :class="activeConditions.includes(btn.key) ? 'border-rose-500 bg-rose-500 text-white' : 'border-slate-300 text-slate-600 hover:bg-slate-50'"
+                        @click="toggleCondition(btn.key)"
+                    >
+                        {{ btn.label }}
+                    </button>
+                    <span class="ml-3 text-xs font-medium text-slate-400">在庫あり:</span>
+                    <button
+                        v-for="btn in HAS_STOCK_BUTTONS"
+                        :key="btn.key"
+                        type="button"
+                        class="rounded-full border px-3 py-1 text-xs font-medium transition-colors"
+                        :class="activeConditions.includes(btn.key) ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 text-slate-600 hover:bg-slate-50'"
+                        @click="toggleCondition(btn.key)"
+                    >
+                        {{ btn.label }}
+                    </button>
+                    <button v-if="hasActiveFilters" type="button" class="ml-auto text-xs font-medium text-primary-600 hover:underline" @click="clearFilters">条件をクリア</button>
+                </div>
+
+                <p class="text-xs text-slate-400"
+                    >該当SKU: <span class="font-semibold text-slate-700">{{ matchedSkuCount }}</span> / 全{{ totalSkuCount }}件</p
                 >
-                    {{ btn.label }}
-                </button>
-                <span class="ml-3 text-xs font-medium text-slate-400">在庫あり:</span>
-                <button
-                    v-for="btn in HAS_STOCK_BUTTONS"
-                    :key="btn.key"
-                    type="button"
-                    class="rounded-full border px-3 py-1 text-xs font-medium transition-colors"
-                    :class="activeConditions.includes(btn.key) ? 'border-green-600 bg-green-600 text-white' : 'border-slate-300 text-slate-600 hover:bg-slate-50'"
-                    @click="toggleCondition(btn.key)"
-                >
-                    {{ btn.label }}
-                </button>
-                <button v-if="hasActiveFilters" type="button" class="ml-auto text-xs font-medium text-blue-600 hover:underline" @click="clearFilters"> 条件をクリア </button>
             </div>
+        </BaseCard>
 
-            <p class="text-xs text-slate-400"
-                >該当SKU: <span class="font-semibold text-slate-700">{{ matchedSkuCount }}</span> / 全{{ totalSkuCount }}件</p
-            >
-        </section>
+        <BaseCard v-if="filteredProducts.length === 0" :padded="false">
+            <BaseEmpty icon="filter_alt_off" title="条件に一致するSKUがありません" description="0件です。絞込条件を見直してください。" />
+        </BaseCard>
 
-        <div v-if="filteredProducts.length === 0" class="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-sm text-slate-400">
-            条件に一致するSKUがありません（0件）。
-        </div>
-
-        <section v-for="product in filteredProducts" :key="product.productCode" class="rounded-xl border border-slate-200 bg-white">
-            <div class="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 lg:flex-row lg:items-start lg:justify-between">
+        <BaseCard v-for="product in filteredProducts" :key="product.productCode" :padded="false">
+            <div class="flex flex-col gap-3 border-b border-slate-200 px-5 py-3.5 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                     <p class="text-sm font-semibold text-slate-900">
                         {{ product.productCode }} <span class="font-normal text-slate-600">{{ product.productName }}</span>
                     </p>
                     <div class="mt-1 flex gap-1.5">
-                        <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{{ product.brand }}</span>
-                        <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{{ product.category }}</span>
+                        <BaseBadge>{{ product.brand }}</BaseBadge>
+                        <BaseBadge>{{ product.category }}</BaseBadge>
                     </div>
                 </div>
                 <div class="w-full lg:w-80">
@@ -249,6 +252,6 @@ function exportExcel(scope: "all" | "filtered") {
                     </tbody>
                 </table>
             </div>
-        </section>
+        </BaseCard>
     </div>
 </template>
