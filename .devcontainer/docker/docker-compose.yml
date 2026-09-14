@@ -1,0 +1,46 @@
+name: zerostockview
+
+services:
+  # PHP
+  app:
+    container_name: zerostockview-app
+    build:
+      context: ../../
+      dockerfile: .devcontainer/docker/dockerfile
+    volumes:
+      - ../../:/workspace
+      - ./app/php.ini:/etc/php.ini
+      - vendor-cache:/workspace/src/vendor
+      - node-modules-cache:/workspace/src/node_modules
+    depends_on:
+      - db
+    networks:
+      - network
+    tty: true
+
+  # MySQL
+  db:
+    container_name: zerostockview-db
+    image: mysql:8.0.39
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: zerostockview
+      MYSQL_USER: developer
+      MYSQL_PASSWORD: developer
+      TZ: Asia/Tokyo
+    ports:
+      - "3307:3306"
+    volumes:
+      - volume:/var/lib/mysql
+    networks:
+      - network
+
+volumes:
+  volume:
+  vendor-cache:
+  node-modules-cache:
+
+# 定義されたネットワーク
+networks:
+  network:
+    driver: bridge
