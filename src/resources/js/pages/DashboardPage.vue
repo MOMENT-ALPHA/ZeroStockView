@@ -27,7 +27,7 @@ const stats = computed(() => {
     };
 });
 
-const previewProducts = computed(() => latest.value?.products.slice(0, 5) ?? []);
+const previewProducts = computed(() => latest.value?.products ?? []);
 </script>
 
 <template>
@@ -74,9 +74,9 @@ const previewProducts = computed(() => latest.value?.products.slice(0, 5) ?? [])
                 </BaseCard>
             </div>
 
-            <BaseCard title="品番プレビュー（先頭5件）" :padded="false">
+            <BaseCard title="品番プレビュー" :padded="false">
                 <template #actions>
-                    <RouterLink :to="{ name: 'survey-result', params: { id: latest.id } }" class="text-sm text-primary-600 hover:underline">すべて見る</RouterLink>
+                    <RouterLink :to="{ name: 'survey-result', params: { id: latest.id } }" class="text-sm text-primary-600 hover:underline">詳細を見る</RouterLink>
                 </template>
                 <ul class="divide-y divide-slate-100">
                     <li v-for="product in previewProducts" :key="product.productCode" class="flex items-center justify-between gap-3 px-5 py-3">

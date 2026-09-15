@@ -4,7 +4,7 @@ import { useAuthStore } from "@/stores/auth";
 const router = createRouter({
     history: createWebHistory(),
     routes: [
-        { path: "/", redirect: { name: "data-import" } },
+        { path: "/", redirect: { name: "dashboard" } },
         {
             path: "/login",
             name: "login",
