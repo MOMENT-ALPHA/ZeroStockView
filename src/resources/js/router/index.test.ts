@@ -7,13 +7,20 @@ describe("router", () => {
     beforeEach(async () => {
         setActivePinia(createPinia());
         useAuthStore().isLoggedIn = true;
-        await router.replace("/dashboard");
+        await router.replace("/import");
     });
 
-    it("redirects the root path to the dashboard", async () => {
+    it("redirects the root path to data import", async () => {
         await router.push("/");
 
-        expect(router.currentRoute.value.name).toBe("dashboard");
-        expect(router.currentRoute.value.path).toBe("/dashboard");
+        expect(router.currentRoute.value.name).toBe("data-import");
+        expect(router.currentRoute.value.path).toBe("/import");
+    });
+
+    it("redirects logged-in users from login to data import", async () => {
+        await router.push("/login");
+
+        expect(router.currentRoute.value.name).toBe("data-import");
+        expect(router.currentRoute.value.path).toBe("/import");
     });
 });

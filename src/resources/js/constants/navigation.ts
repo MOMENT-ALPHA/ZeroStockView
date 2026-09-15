@@ -5,7 +5,6 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-    { name: "dashboard", label: "ダッシュボード", icon: "dashboard" },
     { name: "data-import", label: "データ取込", icon: "upload" },
     { name: "import-settings", label: "取込設定", icon: "settings" },
     { name: "survey-history", label: "在庫調査履歴", icon: "history" },

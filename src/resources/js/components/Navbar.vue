@@ -26,7 +26,7 @@ function logout() {
 
 <template>
     <nav class="border-b border-slate-200 bg-white">
-        <div class="mx-auto flex w-full max-w-300 flex-wrap items-center justify-between px-4 py-2.5 sm:px-6 lg:px-8">
+        <div class="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between px-4 py-2.5 sm:px-6 lg:px-8">
             <RouterLink :to="{ name: 'data-import' }" class="flex items-center gap-2">
                 <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white">
                     <AppIcon name="counter_0" :size="20" filled />
@@ -70,7 +70,7 @@ function logout() {
             </div>
         </div>
 
-        <div v-if="mobileOpen" class="border-t border-slate-200 px-4 pt-2 pb-3 lg:hidden">
+        <div v-if="mobileOpen" class="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 pt-2 pb-3 sm:px-6 lg:hidden">
             <RouterLink
                 v-for="item in NAV_ITEMS"
                 :key="item.name"

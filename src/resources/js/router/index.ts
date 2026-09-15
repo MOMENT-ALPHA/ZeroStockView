@@ -4,17 +4,12 @@ import { useAuthStore } from "@/stores/auth";
 const router = createRouter({
     history: createWebHistory(),
     routes: [
-        { path: "/", redirect: { name: "dashboard" } },
+        { path: "/", redirect: { name: "data-import" } },
         {
             path: "/login",
             name: "login",
             component: () => import("@/pages/LoginPage.vue"),
             meta: { public: true },
-        },
-        {
-            path: "/dashboard",
-            name: "dashboard",
-            component: () => import("@/pages/DashboardPage.vue"),
         },
         {
             path: "/import",
@@ -62,7 +57,7 @@ router.beforeEach((to) => {
         return { name: "login", query: { redirect: to.fullPath } };
     }
     if (auth.isLoggedIn && to.name === "login") {
-        return { name: "dashboard" };
+        return { name: "data-import" };
     }
     return true;
 });
